@@ -1,17 +1,20 @@
 
+import 'package:user_management_app/features/user_list/data/models/user_list_model.dart';
+
 enum UserListStatus {
   success,
   failure,
   loading,
   data,
+  addSuccess,
 }
 
 class UserListState {
-  List<dynamic>? users;
-  List<dynamic>? filteredUsers;
-  String? searchQuery;
-  UserListStatus? status;
-  String? errorMessage;
+  final List<UserListModel>? users;
+  final List<UserListModel>? filteredUsers;
+  final String? searchQuery;
+  final UserListStatus? status;
+  final String? errorMessage;
 
   UserListState({
     this.users,
@@ -22,8 +25,8 @@ class UserListState {
   });
 
   UserListState copyWith({
-    List<dynamic>? users,
-    List<dynamic>? filteredUsers,
+    List<UserListModel>? users,
+    List<UserListModel>? filteredUsers,
     String? searchQuery,
     String? errorMessage,
     required UserListStatus? status,

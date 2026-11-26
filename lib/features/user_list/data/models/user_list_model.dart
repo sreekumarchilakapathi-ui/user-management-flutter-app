@@ -35,4 +35,13 @@ class UserListModel {
         zipcode: address['zipcode']??''
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'email': email,
+      'phone': phone,
+    };
+  }
+
 }

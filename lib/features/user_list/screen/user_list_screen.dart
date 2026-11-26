@@ -1,151 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:user_management_app/features/user_list/screen/user_details_screen.dart';
-//
-// import '../../../core/api/api_client.dart';
-// import '../bloc/user_list_bloc.dart';
-// import '../bloc/user_list_event.dart';
-// import '../bloc/user_list_state.dart';
-// import '../data/repository/user_list_repository.dart';
-// import '../data/services/user_list_services.dart';
-//
-// class UserListWidget extends StatelessWidget {
-//   const UserListWidget({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return BlocProvider<UserListBloc>(
-//       create: (context) =>
-//           UserListBloc(UserRepository(UserApiService(ApiClient())))
-//             ..add(FetchUsersEvent()),
-//       child: const UserListPage(),
-//     );
-//   }
-// }
-//
-// class UserListPage extends StatefulWidget {
-//   const UserListPage({super.key});
-//
-//   @override
-//   State<UserListPage> createState() => _State();
-// }
-//
-// class _State extends State<UserListPage> {
-//   final searchController = TextEditingController();
-//
-//   @override
-//   void dispose() {
-//     searchController.dispose();
-//     super.dispose();
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return BlocConsumer<UserListBloc, UserListState>(
-//       listener: (context, state) {
-//         if (state.status == UserListStatus.failure) {
-//           ScaffoldMessenger.of(context).showSnackBar(
-//             SnackBar(
-//               content: Text(state.errorMessage ?? 'Something went wrong'),
-//             ),
-//           );
-//         }
-//       },
-//       builder: (context, state) {
-//         return Scaffold(
-//           appBar: AppBar(
-//             title: const Text(
-//               'User Management',
-//               style: TextStyle(fontWeight: FontWeight.bold),
-//             ),
-//             centerTitle: true,
-//           ),
-//           body: Padding(
-//             padding: const EdgeInsets.all(16),
-//             child: Column(
-//               children: [
-//                 TextField(
-//                   controller: searchController,
-//                   onChanged: (value) {
-//                     context.read<UserListBloc>().add(
-//                       SearchUsersEvent(query: value),
-//                     );
-//                   },
-//                   decoration: InputDecoration(
-//                     hintText: 'Search users',
-//                     prefixIcon: const Icon(Icons.search),
-//                     border: OutlineInputBorder(
-//                       borderRadius: BorderRadius.circular(15),
-//                     ),
-//                   ),
-//                 ),
-//
-//                 const SizedBox(height: 20),
-//
-//                 Expanded(
-//                   child: state.status == UserListStatus.loading
-//                       ? const Center(child: CircularProgressIndicator())
-//                       : state.status == UserListStatus.failure
-//                       ? Center(
-//                           child: ElevatedButton(
-//                             onPressed: () {
-//                               context.read<UserListBloc>().add(
-//                                 FetchUsersEvent(),
-//                               );
-//                             },
-//                             child: const Text('Retry'),
-//                           ),
-//                         )
-//                       : state.status == UserListStatus.success
-//                       ? (state.filteredUsers ?? []).isEmpty
-//                             ? const Center(child: Text('No users found'))
-//                             : ListView.builder(
-//                                 itemCount: state.filteredUsers!.length,
-//                                 itemBuilder: (context, index) {
-//                                   final user = state.filteredUsers![index];
-//
-//                                   return InkWell(
-//                                     onTap: () {
-//                                       Navigator.push(
-//                                         context,
-//                                         MaterialPageRoute(
-//                                           builder: (context) =>
-//                                               UserDetailsScreen( user: user),
-//                                         ),
-//                                       );
-//                                     },
-//                                     child: Card(
-//                                        margin: const EdgeInsets.only(bottom: 12),
-//                                       child: ListTile(
-//                                         leading: CircleAvatar(
-//                                           child: Text(
-//                                             user.name.isNotEmpty
-//                                                 ? user.name[0].toUpperCase()
-//                                                 : '?',
-//                                           ),
-//                                         ),
-//                                         title: Text(user.name),
-//                                         subtitle: Text(user.email),
-//                                         trailing: const Icon(
-//                                           Icons.arrow_forward_ios,
-//                                           size: 16,
-//                                         ),
-//                                       ),
-//                                     ),
-//                                   );
-//                                 },
-//                               )
-//                       : const Center(child: Text('Fetching users...')),
-//                 ),
-//               ],
-//             ),
-//           ),
-//         );
-//       },
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -156,6 +8,7 @@ import '../bloc/user_list_event.dart';
 import '../bloc/user_list_state.dart';
 import '../data/repository/user_list_repository.dart';
 import '../data/services/user_list_services.dart';
+import 'add_user_screen.dart';
 import 'user_details_screen.dart';
 
 class UserListWidget extends StatelessWidget {
@@ -164,9 +17,7 @@ class UserListWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<UserListBloc>(
-      create: (context) =>
-          UserListBloc(UserRepository(UserApiService(ApiClient())))
-            ..add(FetchUsersEvent()),
+      create: (context) => UserListBloc(UserRepository(UserApiService(ApiClient())))..add(FetchUsersEvent()),
       child: const UserListPage(),
     );
   }
@@ -226,6 +77,14 @@ class _State extends State<UserListPage> {
       }),
       child: BlocConsumer<UserListBloc, UserListState>(
         listener: (context, state) {
+          if (state.status == UserListStatus.addSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('User added successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
           if (state.status == UserListStatus.failure) {
             showDialog(
               context: context,
@@ -275,6 +134,26 @@ class _State extends State<UserListPage> {
                   ),
                 ],
               ),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    final userListBloc = context.read<UserListBloc>();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BlocProvider.value(
+                            value: userListBloc,
+                            child: const AddUserScreen()),
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.person_add_alt_1,
+                    color: primaryColor,
+                  ),
+                  tooltip: 'Add User',
+                ),
+              ],
             ),
             body: Padding(
               padding: const EdgeInsets.all(16),
@@ -331,7 +210,7 @@ class _State extends State<UserListPage> {
                               child: const Text('Retry'),
                             ),
                           )
-                        : state.status == UserListStatus.success
+                        : (state.status == UserListStatus.success || state.status == UserListStatus.addSuccess)
                         ? (state.filteredUsers ?? []).isEmpty
                               ? const Center(
                                   child: Text(

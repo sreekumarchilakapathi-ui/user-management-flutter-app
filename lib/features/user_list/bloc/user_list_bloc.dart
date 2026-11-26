@@ -10,12 +10,13 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
   final UserRepository userRepository;
 
   UserListBloc(this.userRepository) : super(UserListState(status: UserListStatus.data)) {
-    on<FetchUsersEvent>(_fetchUsers);
-    on<SearchUsersEvent>(_searchUsers);
+    on<FetchUsersEvent>(fetchUsers);
+    on<SearchUsersEvent>(searchUsers);
+    on<AddUserEvent>(addUser);
   }
 
 
-  Future<void> _fetchUsers(FetchUsersEvent event, Emitter<UserListState> emit) async {
+  Future<void> fetchUsers(FetchUsersEvent event,emit) async {
     emit(state.copyWith(status: UserListStatus.loading));
     try {
       final List<UserListModel> users =  await userRepository.getUsers();
@@ -37,10 +38,7 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
     }
   }
 
-  Future<void> _searchUsers(
-      SearchUsersEvent event,
-      Emitter<UserListState> emit,
-      ) async {
+  Future<void> searchUsers(SearchUsersEvent event, emit) async {
     final query = event.query.toLowerCase().trim();
 
     final filteredUsers = (state.users ?? []).where((user) {
@@ -55,5 +53,25 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
         status: UserListStatus.success,
       ),
     );
+  }
+
+  Future<void> addUser(AddUserEvent event, emit)async{
+    emit(state.copyWith(status: UserListStatus.loading));
+
+    try{
+      final newUser = await userRepository.addUser(event.user);
+      final updatedUsers = [
+        newUser,
+        ...?state.users
+      ];
+      emit(state.copyWith(status: UserListStatus.addSuccess,
+      users: updatedUsers,
+        filteredUsers: updatedUsers
+      ));
+    }
+    catch(e){
+
+      emit(state.copyWith(status: UserListStatus.failure,errorMessage: e.toString()));
+    }
   }
 }
